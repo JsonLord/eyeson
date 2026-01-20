@@ -1,0 +1,4 @@
+HF_PROFILE_ID=harvesthealth
+HF_SPACE_NAME=webvoyager_tinytroupe
+HF_SDK=docker
+HF_DEPLOY_ENABLED=True
