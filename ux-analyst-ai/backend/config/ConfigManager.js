@@ -115,10 +115,7 @@ class ConfigManager {
       'DATABASE_PASSWORD': 'database.password',
 
       // AI Services
-      'GEMINI_API_KEY': 'ai.gemini.apiKey',
-      'GEMINI_MODEL': 'ai.gemini.model',
-      'GEMINI_MAX_RETRIES': 'ai.gemini.maxRetries',
-      'GEMINI_TIMEOUT_MS': 'ai.gemini.timeoutMs',
+      'BLABLADOR_API_KEY': 'ai.blablador.apiKey',
 
       // Analysis
       'MAX_CONCURRENT_ANALYSES': 'analysis.maxConcurrentAnalyses',
@@ -420,7 +417,7 @@ class ConfigManager {
    */
   validateRequiredEnvVars() {
     const required = [
-      'GEMINI_API_KEY'
+      'BLABLADOR_API_KEY'
     ];
 
     const missing = required.filter(envVar => !process.env[envVar]);
