@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const blabladorService = require('./blabladorService');
 const fs = require('fs').promises;
 const IAICritiqueService = require('../interfaces/IAICritiqueService');
 const CircuitBreaker = require('../core/CircuitBreaker');
@@ -20,48 +20,37 @@ class AICritiqueService extends IAICritiqueService {
       averageResponseTime: 0
     };
 
-    // Get API key from config or environment
-    const apiKey = config.ai?.gemini?.apiKey || process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Gemini API key is required (config.ai.gemini.apiKey or GEMINI_API_KEY env var)');
-    }
-
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({
-      model: config.ai?.gemini?.model || process.env.GEMINI_MODEL || 'gemini-1.5-flash'
-    });
-
     // Initialize circuit breaker for AI operations
     this.circuitBreaker = CircuitBreaker.forAPI('AICritique', {
-      failureThreshold: config.ai?.gemini?.failureThreshold || 5,
-      recoveryTimeout: config.ai?.gemini?.recoveryTimeout || 60000,
+      failureThreshold: config.ai?.blablador?.failureThreshold || 5,
+      recoveryTimeout: config.ai?.blablador?.recoveryTimeout || 60000,
       expectedErrors: ['rate limit', '429', '503', 'timeout', 'overloaded', 'quota']
     });
 
     // Configuration for timeouts and retries
-    this.timeoutMs = config.ai?.gemini?.timeoutMs || 45000;
-    this.maxRetries = config.ai?.gemini?.maxRetries || 3;
-    this.baseDelay = config.ai?.gemini?.baseDelay || 2000;
+    this.timeoutMs = config.ai?.blablador?.timeoutMs || 45000;
+    this.maxRetries = config.ai?.blablador?.maxRetries || 3;
+    this.baseDelay = config.ai?.blablador?.baseDelay || 2000;
   }
 
-  async callGeminiWithRetry(apiCall, maxRetries = this.maxRetries, baseDelay = this.baseDelay) {
+  async callBlabladorWithRetry(apiCall, maxRetries = this.maxRetries, baseDelay = this.baseDelay) {
     const startTime = Date.now();
     this.stats.critiqueAttempts++;
 
     return this.circuitBreaker.execute(async () => {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          this.logger.log(`Gemini API attempt ${attempt}/${maxRetries}`);
+          this.logger.log(`Blablador API attempt ${attempt}/${maxRetries}`);
 
           // Add timeout wrapper to prevent infinite hanging
           const result = await Promise.race([
             apiCall(),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Gemini API call timed out')), this.timeoutMs)
+              setTimeout(() => reject(new Error('Blablador API call timed out')), this.timeoutMs)
             )
           ]);
 
-          this.logger.log(`Gemini API attempt ${attempt} succeeded`);
+          this.logger.log(`Blablador API attempt ${attempt} succeeded`);
 
           // Update stats
           const responseTime = Date.now() - startTime;
@@ -70,7 +59,7 @@ class AICritiqueService extends IAICritiqueService {
 
           return result;
         } catch (error) {
-          this.logger.error(`Gemini API attempt ${attempt} failed:`, error.message);
+          this.logger.error(`Blablador API attempt ${attempt} failed:`, error.message);
 
           // Check if it's a retryable error
           const isRetryable = error.status === 503 ||
@@ -101,27 +90,18 @@ class AICritiqueService extends IAICritiqueService {
       throw new Error('AI Critique service is shutting down');
     }
 
-    const {
-      screenshots,
-      accessibilityResults,
-      visualAnalysis,
-      url
-    } = analysisData;
-
     try {
       const prompt = this.buildCritiquePrompt(analysisData);
 
-      // Prepare image data for Gemini (if screenshots available)
-      const imageParts = await this.prepareImageParts(screenshots);
+      const modelAlias = 'alias-large';
 
-      // Combine text prompt with images
-      const parts = [prompt, ...imageParts];
+      const imageParts = await this.prepareImageParts(analysisData.screenshots);
 
-      const response = await this.callGeminiWithRetry(async () => {
-        const result = await this.model.generateContent(parts);
-        return await result.response;
+      const critiqueText = await this.callBlabladorWithRetry(async () => {
+        // For now, we only send the first image (desktop) to the API.
+        const imageData = imageParts.length > 0 ? imageParts[0] : null;
+        return await blabladorService.query(prompt, modelAlias, imageData);
       });
-      const critiqueText = response.text();
 
       return this.parseCritiqueResponse(critiqueText);
 
@@ -135,7 +115,7 @@ class AICritiqueService extends IAICritiqueService {
     const imageParts = [];
 
     try {
-      // Add up to 3 screenshots (desktop, tablet, mobile) to keep under Gemini limits
+      // Add up to 3 screenshots (desktop, tablet, mobile)
       const priorityViewports = ['desktop', 'tablet', 'mobile'];
 
       for (const viewport of priorityViewports) {
@@ -143,15 +123,7 @@ class AICritiqueService extends IAICritiqueService {
           const screenshot = screenshots[viewport];
           try {
             const imageData = await fs.readFile(screenshot.filepath);
-            imageParts.push({
-              inlineData: {
-                data: imageData.toString('base64'),
-                mimeType: 'image/png'
-              }
-            });
-
-            // Add context about which viewport this is
-            imageParts.push(`[${viewport.toUpperCase()} SCREENSHOT - ${screenshot.width}x${screenshot.height}]`);
+            imageParts.push(imageData.toString('base64'));
           } catch (fileError) {
             this.logger.warn(`Could not read screenshot for ${viewport}:`, fileError.message);
           }
@@ -489,13 +461,12 @@ Give a brief assessment (max 300 words) covering:
 
 Be concise and actionable.`;
 
-      const result = await this.callGeminiWithRetry(async () => {
-        const result = await this.model.generateContent(prompt);
-        return await result.response;
+      const critiqueText = await this.callBlabladorWithRetry(async () => {
+        return await blabladorService.query(prompt, 'alias-fast');
       });
 
       return {
-        quick_critique: result.text(),
+        quick_critique: critiqueText,
         generated_at: new Date().toISOString(),
         type: 'quick'
       };
@@ -504,8 +475,30 @@ Be concise and actionable.`;
       this.logger.error('Quick critique error:', error);
 
       // Fallback to basic analysis when AI is unavailable
-      this.logger.warn('Gemini API unavailable, providing fallback analysis');
+      this.logger.warn('Blablador API unavailable, providing fallback analysis');
       return this.generateFallbackCritique(url, basicData);
+    }
+  }
+
+  async generateCode(prompt) {
+    if (this.isShuttingDown) {
+      throw new Error('AI Critique service is shutting down');
+    }
+
+    try {
+      const code = await this.callBlabladorWithRetry(async () => {
+        return await blabladorService.query(prompt, 'alias-code');
+      });
+
+      return {
+        code: code,
+        generated_at: new Date().toISOString(),
+        type: 'code'
+      };
+
+    } catch (error) {
+      this.logger.error('Code generation error:', error);
+      throw new Error(`Failed to generate code: ${error.message}`);
     }
   }
 

@@ -33,9 +33,9 @@ const configSchema = Joi.object({
 
   // AI Services Configuration
   ai: Joi.object({
-    gemini: Joi.object({
+    blablador: Joi.object({
       apiKey: Joi.string().required(),
-      model: Joi.string().default('gemini-1.5-flash'),
+      model: Joi.string().default('alias-fast'),
       maxRetries: Joi.number().integer().min(1).max(10).default(3),
       baseDelay: Joi.number().integer().positive().default(2000),
       timeoutMs: Joi.number().integer().positive().default(45000),
