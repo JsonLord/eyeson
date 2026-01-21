@@ -1,97 +1,92 @@
+Working behaviour and prompt context for Jules. how to follow the instructions in the other files and how to use the context for the task at hand. 
+Add: to never delete a hf_upload.py file once created. And always reuse that before testing the logs, then testing apis for functionality. Then submit with summary of final results, of the space and the functionalities. 
+
+Agent behaviour: Scan vision of project, scan the repos asociated, scan the task list. Build component by component. Test components. Identify where components interact. Test the internal interaction. Build the functionality FastAPI endpoint for each feature to later be tested via api once deployed. Then test the overall app from start to finish. Then make the deployment files and script for the huggingface deployment based on the /deployment folder and huggingface space parameters. Then expose the FASTAPis in the way it is recommended. Gradio=gradio endpoints. Docker= space url endpoints /health etc. Then deploy. Then check the build logs, then the run logs. Fix failures until successfully running. Then check the exposed FastAPI endpoints for functionality if no Auth tokens for the app are needed. If they are needed. Submit once the app is running and wait for the user to enter the space secrets, and test then. 
+
+
+## Project Specific Instructions
+Here’s a structured `AGENTS.md` file with specific instructions for your project, formatted in Markdown:
+
+```markdown
 # AGENTS.md
 
-## Agent Name: Google Jules
+## Working Behavior for This Project
 
-### 1. Working Behavior
+### Core Functionality
+1. **Deployment**:
+   - The eyeson application must be deployed to Hugging Face Spaces (`harvesthealth/tinytroupe-alpha`) using Gradio.
+   - Ensure the Gradio interface is responsive and user-friendly, with clear task input fields and model selection (alias-large, alias-fast, alias-code).
 
-As **Google Jules**, your role is to act as an AI coding agent responsible for implementing and maintaining the Hugging Face Space `harvesthealth/webvoyager_tinytroupe`. You will be working with the `grzetich/eyeson` repository to integrate a custom OpenAI-compatible LLM endpoint (`Helmholtz Blablador`) and deploy it as a fully functional Gradio-based chat interface.
+2. **LLM Integration**:
+   - Connect to the Helmholtz Blablador API (`https://api.helmholtz-blablador.fz-juelich.de/v1`) using the `BLABLADOR_API_KEY` stored in Hugging Face Space Secrets.
+   - Implement intelligent task routing:
+     - **alias-large**: For complex tasks (e.g., planning, multi-step reasoning).
+     - **alias-fast**: For quick queries (e.g., simple Q&A, utility operations).
+     - **alias-code**: For code-related tasks (e.g., debugging, generation).
 
-Your workflow includes:
+3. **Security**:
+   - Never expose the `BLABLADOR_API_KEY` in logs or frontend code. Use Hugging Face’s Secrets management.
 
-- Cloning and analyzing the base repository (`grzetich/eyeson`)
-- Modifying the OpenAI client configuration to point to the custom endpoint
-- Adding model selection UI elements for `alias-large`, `alias-fast`, and `alias-code`
-- Ensuring secure API key handling using Hugging Face Space Secrets
-- Validating all components through tests and end-to-end pipelines
-- Maintaining clean, modular, and documented code aligned with project goals
-
-You are expected to make intelligent decisions about implementation paths while adhering strictly to security best practices, OpenAI compatibility standards, and deployment constraints.
-
----
-
-### 2. Prompt Context
-
-**Core Vision**:  
-Deploy a Gradio-powered Hugging Face Space that integrates a custom OpenAI-compatible LLM endpoint (`Helmholtz Blablador`) to provide multi-purpose AI interactions via three specialized model aliases.
-
-**Key Components**:
-- **Repository**: [`grzetich/eyeson`](https://github.com/grzetich/eyeson)
-- **Endpoint**: [Helmholtz Blablador LLM API](https://api.helmholtz-blablador.fz-juelich.de/v1)
-- **Models**:
-  - `alias-large`: Advanced planning and reasoning
-  - `alias-fast`: Quick utility responses
-  - `alias-code`: Code generation and analysis
-- **Deployment Target**: `harvesthealth/webvoyager_tinytroupe`
-- **Authentication**: Use `BLABLADOR_API_KEY` stored securely in Hugging Face Space secrets
-
-**Security Constraints**:
-- No hardcoded credentials
-- All API keys must come from Hugging Face Space secrets
-- Validate authentication flow before making any API calls
-
-**Functionality Requirements**:
-- Full Gradio UI functionality
-- Model alias switching without breaking session
-- Proper error handling and logging
-- Support for temperature, max_tokens parameters (as per OpenAI spec)
+4. **Extensibility**:
+   - Design the LLM client modularly to support future model aliases or APIs (e.g., multi-modal models).
 
 ---
 
-### 3. Instructions on Following Project Context
+## Key Project-Specific Context
 
-To ensure consistency and correctness, always refer to the following sections of `project_context.md`:
+### Technical Stack
+- **Frontend**: Gradio (default for HF Spaces).
+- **Backend**: Python (Flask/FastAPI if needed for custom routing).
+- **LLM API**: OpenAI-compatible format (Blablador API).
+- **Authentication**: Hugging Face Secrets (`BLABLADOR_API_KEY`).
 
-#### 🔧 Repository & Integration
-- Clone and inspect the `grzetich/eyeson` repository
-- Identify where the OpenAI client is initialized and used
-- Modify `openai.api_base` to use the Helmholtz endpoint (`https://api.helmholtz-blablador.fz-juelich.de/v1`)
-- Add a dropdown menu in the Gradio UI to allow users to select one of the three model aliases (`alias-large`, `alias-fast`, `alias-code`)
+### Deployment Notes
+- The space is publicly accessible but restrict API key exposure.
+- Monitor HF Spaces logs for errors (e.g., API rate limits, key invalidation).
 
-#### 🛡️ Authentication
-- Retrieve `BLABLADOR_API_KEY` from Hugging Face Space secrets
-- Set it as the Bearer token in all outgoing requests
-- Never expose or log the API key anywhere in the application
-
-#### 🧪 Testing Strategy
-- Run component-level tests for:
-  - Repository inspection
-  - Custom endpoint integration
-  - Model alias selection
-  - Authentication
-- Perform pipeline testing including:
-  - Full end-to-end deployment
-  - Chat completion with each model
-  - Health checks and model switching behavior
-
-#### ⚙️ Deployment Process
-- Follow the steps outlined under “Monitoring Task” for building and deploying:
-  1. Inspect and modify the repository
-  2. Configure secrets in Hugging Face Space
-  3. Sync GitHub repo with Space
-  4. Monitor logs for successful startup and runtime behavior
+### Task Routing Logic
+- Use a mapping (e.g., `task_type: model_alias`) to route inputs dynamically.
+- Fallback to `alias-fast` for unclassified tasks.
 
 ---
 
-### 4. Tips for Best Results
+## Tips for Best Results
 
-| Area | Tip |
-|------|-----|
-| **Code Structure** | Keep modifications minimal and focused; avoid breaking existing features unless necessary. |
-| **Model Routing Logic** | Implement a clean mapping between UI selections and backend model names (`alias-*`). |
-| **Logging & Debugging** | Avoid printing sensitive data like API keys. Log only relevant debug messages for troubleshooting. |
-| **API Compatibility** | Ensure the custom endpoint conforms precisely to the OpenAI Chat Completions API specification. |
-| **Error Handling** | Gracefully handle cases such as invalid model aliases, authentication failures, or network timeouts. |
-| **User Experience** | Make sure the UI clearly indicates which model is currently active and provides feedback during loading states. |
-| **Documentation** | Add inline comments and update any README if needed to help future maintainers understand how the custom endpoint is integrated. |
+### 1. Testing
+- **Local Testing**: Use `gradio app.py` to test locally before deploying to HF Spaces.
+- **API Key Validation**: Test the Blablador API with a minimal script:
+  ```python
+  import requests
+  headers = {"Authorization": f"Bearer {os.getenv('BLABLADOR_API_KEY')}"}
+  response = requests.post("https://api.helmholtz-blablador.fz-juelich.de/v1/chat/completions", headers=headers, json={"model": "alias-fast", "messages": [{"role": "user", "content": "test"}]})
+  print(response.json())
+  ```
 
-By following these guidelines, you'll produce high-quality,
+### 2. Performance
+- Cache frequent queries (e.g., simple utility tasks) to reduce API calls.
+- Optimize Gradio UI for mobile devices if needed.
+
+### 3. Debugging
+- Check HF Spaces logs for:
+  - `401 Unauthorized`: Invalid API key.
+  - `429 Too Many Requests`: Rate limit issues.
+  - `500 Internal Error`: Backend routing failures.
+
+### 4. Future-Proofing
+- Add logging for model usage (e.g., task type, latency, tokens).
+- Document new model aliases in a `MODELS.md` file.
+
+---
+
+### Example Workflow
+1. User submits a task via Gradio.
+2. The app routes to `alias-large` if the task contains keywords like "plan" or "analyze."
+3. The request is sent to Blablador with the correct alias and API key.
+4. The response is displayed in Gradio with metadata (e.g., model used).
+
+For questions, refer to:
+- [Hugging Face Spaces Docs](https://huggingface.co/docs/hub/spaces)
+- [Blablador API Docs](https://api.helmholtz-blablador.fz-juelich.de/docs)
+```
+
+This file provides clear guidance for developers/maintainers while addressing security, scalability, and debugging.
