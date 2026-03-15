@@ -31,8 +31,11 @@ RUN cd backend && npm ci --only=production
 # Copy backend source code
 COPY backend ./backend
 
-# Copy frontend build (assumes it's already built)
-COPY frontend/dist ./frontend/dist
+# Build frontend
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm ci
+COPY frontend ./frontend
+RUN cd frontend && npm run build
 
 # Create data directories
 RUN mkdir -p data/screenshots
@@ -41,12 +44,15 @@ RUN mkdir -p data/screenshots
 RUN chown -R node:node /app
 USER node
 
+# Set Port environment variable to Hugging Face requirement
+ENV PORT=7860
+
 # Expose port
-EXPOSE 3000
+EXPOSE 7860
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD node -e "require('http').get('http://localhost:7860/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 # Start the application
 CMD ["npm", "start"]

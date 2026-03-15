@@ -1,3 +1,9 @@
+---
+title: UX Analyst AI
+sdk: docker
+app_port: 7860
+---
+
 # UX Analyst AI
 
 An AI-powered UX analysis tool that provides comprehensive website analysis with actionable recommendations and implementation code generation.
