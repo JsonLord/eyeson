@@ -4,3 +4,7 @@ build/
 .git/
 .env
 data/
+backend/node_modules/
+frontend/node_modules/
+cli/node_modules/
+mcp-server/node_modules/
