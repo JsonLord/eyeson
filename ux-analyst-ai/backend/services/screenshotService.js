@@ -341,6 +341,7 @@ class ScreenshotService extends IScreenshotService {
    */
   async getStorageStats() {
     try {
+      await this.ensureStorageDirectory();
       const files = await fs.readdir(this.storagePath);
       let totalSize = 0;
       let fileCount = 0;

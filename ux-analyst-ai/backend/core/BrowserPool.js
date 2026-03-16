@@ -94,16 +94,22 @@ class BrowserPool extends EventEmitter {
     this.maxSize = options.maxSize || 3;
     this.minSize = options.minSize || 1;
     this.launchOptions = options.launchOptions || {
-      headless: true,
+      headless: 'new',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--disable-web-security',
+        '--disable-software-rasterizer',
         '--single-process'
       ]
     };
+
+    // Ensure headless is 'new' to fix Puppeteer deprecation/crash warnings
+    if (this.launchOptions.headless === true) {
+      this.launchOptions.headless = 'new';
+    }
 
     this.instanceOptions = {
       maxIdleTime: options.maxIdleTime || 300000,
