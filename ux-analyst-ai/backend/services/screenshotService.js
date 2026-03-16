@@ -22,8 +22,16 @@ class ScreenshotService extends IScreenshotService {
     this.browserPool = new BrowserPool({
       maxSize: config.browser.poolSize,
       launchOptions: {
-        headless: config.browser.headless,
-        args: config.browser.launchArgs
+        headless: 'new',
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-software-rasterizer',
+          '--single-process'
+        ]
       },
       maxIdleTime: config.browser.maxIdleTimeMs,
       maxLifetime: config.browser.maxLifetimeMs
