@@ -46,6 +46,7 @@ USER node
 
 # Set Port environment variable to Hugging Face requirement
 ENV PORT=7860
+ENV GEMINI_API_KEY="dummy_key_for_healthcheck"
 
 # Expose port
 EXPOSE 7860
