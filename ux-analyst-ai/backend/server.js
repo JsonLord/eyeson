@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const { initializeDatabase } = require('./database/init');
@@ -52,8 +53,65 @@ function setupMiddleware() {
   app.use('/api/health', healthRoutes);
   app.use('/api/analyze', analysisRoutes);
 
+  // Expose root health check to satisfy Agent.md
+  app.use('/health', healthRoutes);
+
+  // Serve API documentation to satisfy Agent.md
+  app.get('/api-docs', (req, res) => {
+    res.json({
+      title: "UX Analyst AI API Documentation",
+      version: "1.0",
+      endpoints: [
+        {
+          path: "/health",
+          method: "GET",
+          purpose: "Returns HTTP 200 when the app is ready. Required for Hugging Face Spaces.",
+          response: {
+            example: { status: "healthy" }
+          }
+        },
+        {
+          path: "/api/analyze",
+          method: "POST",
+          purpose: "Start a new UX analysis",
+          request: {
+            example: {
+              url: "https://example.com",
+              options: {
+                viewports: ["desktop", "tablet", "mobile"],
+                includeAccessibility: true
+              }
+            }
+          },
+          response: {
+            example: { id: "uuid", status: "processing" }
+          }
+        },
+        {
+          path: "/api/analyze/:id",
+          method: "GET",
+          purpose: "Get analysis result",
+          response: {
+            example: { id: "uuid", status: "completed", results: {} }
+          }
+        },
+        {
+          path: "/api/analyze/:id/report",
+          method: "GET",
+          purpose: "Get formatted HTML report",
+          response: {
+            example: "<html>...</html>"
+          }
+        }
+      ]
+    });
+  });
+
   // Static files for screenshots
   app.use('/screenshots', express.static(config.screenshots.storagePath || 'data/screenshots'));
+
+  // Static files for frontend
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
   // Error handling
   app.use((err, req, res, next) => {
@@ -64,9 +122,9 @@ function setupMiddleware() {
     });
   });
 
-  // 404 handler
-  app.use('*', (req, res) => {
-    res.status(404).json({ error: 'Not found' });
+  // Fallback to frontend index.html for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
   });
 }
 
