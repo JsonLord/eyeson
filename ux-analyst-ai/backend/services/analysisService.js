@@ -469,7 +469,9 @@ class AnalysisService {
         layoutScore: 0,
         typographyScore: 0,
         totalIssues: 0,
-        criticalIssues: 0
+        criticalIssues: 0,
+        topIssues: [],
+        responsiveConsistency: 0
       };
     }
 
@@ -583,6 +585,7 @@ class AnalysisService {
   }
 
   identifyWeaknesses(topIssues) {
+    if (!topIssues || !Array.isArray(topIssues)) return [];
     return topIssues.slice(0, 3).map(issue => issue.description);
   }
 

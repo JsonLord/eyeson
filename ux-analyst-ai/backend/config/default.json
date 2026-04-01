@@ -21,7 +21,7 @@
   },
   "ai": {
     "gemini": {
-      "model": "gemini-1.5-flash",
+      "model": "gemini-2.0-flash",
       "maxRetries": 3,
       "baseDelay": 2000,
       "timeoutMs": 45000,

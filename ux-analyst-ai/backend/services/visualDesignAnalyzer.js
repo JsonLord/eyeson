@@ -114,6 +114,9 @@ class VisualDesignAnalyzer {
 
       // Return top 5 colors
       const entries = Array.from(colors.entries() || []);
+      if (entries.length === 0) {
+        return [];
+      }
       return entries
         .sort(([,a], [,b]) => b - a)
         .slice(0, 5)

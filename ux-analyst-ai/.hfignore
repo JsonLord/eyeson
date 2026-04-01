@@ -1,0 +1,15 @@
+node_modules/
+.git/
+data/
+screenshots/
+dist/
+*.log
+.env
+.DS_Store
+frontend/node_modules/
+backend/node_modules/
+ux-analyst-ai/frontend/node_modules/
+ux-analyst-ai/backend/node_modules/
+frontend/dist/
+backend/data/
+backend/logs/
