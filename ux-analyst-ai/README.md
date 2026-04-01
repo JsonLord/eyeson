@@ -1,3 +1,13 @@
+---
+title: UX Analyst AI
+emoji: 🧐
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # UX Analyst AI
 
 An AI-powered UX analysis tool that provides comprehensive website analysis with actionable recommendations and implementation code generation.

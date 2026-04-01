@@ -94,7 +94,8 @@ class BrowserPool extends EventEmitter {
     this.maxSize = options.maxSize || 3;
     this.minSize = options.minSize || 1;
     this.launchOptions = options.launchOptions || {
-      headless: true,
+      headless: 'new',
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',

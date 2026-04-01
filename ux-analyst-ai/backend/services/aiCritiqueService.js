@@ -28,8 +28,8 @@ class AICritiqueService extends IAICritiqueService {
 
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({
-      model: config.ai?.gemini?.model || process.env.GEMINI_MODEL || 'gemini-1.5-flash'
-    });
+      model: config.ai?.gemini?.model || process.env.GEMINI_MODEL || 'gemini-2.0-flash'
+    }, { apiVersion: 'v1beta' });
 
     // Initialize circuit breaker for AI operations
     this.circuitBreaker = CircuitBreaker.forAPI('AICritique', {

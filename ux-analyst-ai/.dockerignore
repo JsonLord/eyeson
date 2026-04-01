@@ -11,8 +11,6 @@ coverage
 *.log
 backend/node_modules
 frontend/node_modules
-frontend/src
-frontend/public
 frontend/.git*
 frontend/vite.config.js
 frontend/tailwind.config.js

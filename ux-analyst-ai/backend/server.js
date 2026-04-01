@@ -5,8 +5,10 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { initializeDatabase } = require('./database/init');
+const path = require('path');
 const analysisRoutes = require('./routes/analysis');
 const healthRoutes = require('./routes/health');
+const docRoutes = require('./routes/docs');
 
 // New robust architecture imports
 const configManager = require('./config/ConfigManager');
@@ -18,6 +20,7 @@ const AnalysisService = require('./services/analysisService');
 const CodeGenerationService = require('./services/codeGenerationService');
 
 const app = express();
+app.set('trust proxy', 1);
 let config = null;
 let PORT = process.env.PORT || 3000;
 
@@ -51,6 +54,15 @@ function setupMiddleware() {
   // Routes
   app.use('/api/health', healthRoutes);
   app.use('/api/analyze', analysisRoutes);
+  app.use('/api-docs', docRoutes);
+
+  // HF Space required health check at root
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  });
+
+  // Serve static frontend files
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
   // Static files for screenshots
   app.use('/screenshots', express.static(config.screenshots.storagePath || 'data/screenshots'));
@@ -64,9 +76,14 @@ function setupMiddleware() {
     });
   });
 
-  // 404 handler
-  app.use('*', (req, res) => {
+  // 404 handler for API routes
+  app.use('/api/*', (req, res) => {
     res.status(404).json({ error: 'Not found' });
+  });
+
+  // Fallback to index.html for frontend routing (SPA)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
   });
 }
 

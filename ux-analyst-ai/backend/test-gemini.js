@@ -20,7 +20,7 @@ async function testGeminiIntegration() {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
       model: process.env.GEMINI_MODEL || 'gemini-1.5-flash'
-    });
+    }, { apiVersion: 'v1' });
 
     console.log(`📡 Using model: ${process.env.GEMINI_MODEL || 'gemini-1.5-flash'}`);
 
