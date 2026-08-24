@@ -1,6 +1,13 @@
 name: UX Analysis
 
 on:
+  workflow_dispatch:
+    inputs:
+      website:
+        description: Website URL to analyze
+        required: true
+        default: https://www.uni-assist.de/bewerben/bewerbung-planen/vpd/
+        type: string
   pull_request:
     branches: [main]
   push:
@@ -26,8 +33,9 @@ jobs:
       - name: Run UX Analysis
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TARGET_WEBSITE: ${{ inputs.website || 'https://www.uni-assist.de/bewerben/bewerbung-planen/vpd/' }}
         run: |
-          ux-analyze https://www.uni-assist.de/bewerben/bewerbung-planen/vpd/ \
+          ux-analyze "$TARGET_WEBSITE" \
             --format json \
             --output ./ux-reports \
             --quick \
